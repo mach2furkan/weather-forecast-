@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hava Durumu Uygulaması</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom, #83a4d4, #b6fbff);
+      color: #333;
+      transition: background 0.5s ease-in-out;
+    }
+
+    .weather-container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #ffffff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #555;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    .dropdown {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    select, button {
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease-in-out;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+      transform: scale(1.05);
+    }
+
+    .weather-info {
+      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+      text-align: left;
+    }
+
+    .weather-info p {
+      font-size: 1.2rem;
+      margin: 10px 0;
+    }
+
+    .daily-forecast {
+      margin-top: 20px;
+    }
+
+    .daily-forecast h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .daily-forecast p {
+      font-size: 1rem;
+      margin: 5px 0;
+    }
+
+    .map-container {
+      margin-top: 20px;
+      height: 300px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .error {
+      color: red;
+      margin-top: 20px;
+      font-size: 1.1rem;
+    }
+
+    .progress-bar {
+      height: 20px;
+      background-color: #f0f0f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      background-color: #4caf50;
+      transition: width 0.3s ease-in-out;
+    }
+
+    .air-quality, .hourly-forecast {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .air-quality p, .hourly-forecast p {
+      margin: 5px 0;
+    }
+
+    .hourly-forecast {
+      margin-top: 20px;
+    }
+
+    .weather-alert {
+      background-color: #ffcccb;
+      color: #a70000;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .visibility {
+      margin-top: 20px;
+      font-size: 1.2rem;
+    }
+
+    .custom-background {
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 5px;
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .custom-background p {
+      margin: 5px 0;
+    }
+
+    .wind-direction {
+      font-size: 1.2rem;
+      margin-top: 20px;
+    }
+
+    .astro-details {
+      margin-top: 20px;
+      font-size: 1rem;
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="weather-container">
+  <h1>Hava Durumu Uygulaması</h1>
+  <div class="dropdown">
+    <select id="city-select">
+      <option value="">Şehir Seçin</option>
+      <option value="Istanbul">İstanbul</option>
+      <option value="Ankara">Ankara</option>
+      <option value="Izmir">İzmir</option>
+      <option value="London">Londra</option>
+      <option value="New York">New York</option>
+    </select>
+    <button id="fetch-weather">Hava Durumunu Getir</button>
+  </div>
+  <div class="weather-info" id="weather-info" style="display: none;">
+    <p id="location"></p>
+    <p id="temperature"></p>
+    <p id="description"></p>
+    <p id="humidity"></p>
+    <p id="wind"></p>
+    <p id="feels-like"></p>
+    <p id="sunrise"></p>
+    <p id="sunset"></p>
+    <p id="uv-index"></p>
+    <p id="air-quality"></p>
+    <p id="precipitation"></p>
+    <div class="progress-bar" id="pressure-bar">
+      <span style="width: 0;"></span>
+    </div>
+    <img id="icon" alt="Weather icon" />
+  </div>
+  <div class="map-container" id="map-container" style="display: none;">
+    <iframe id="map" width="100%" height="300" style="border:0;" loading="lazy"></iframe>
+  </div>
+  <div class="hourly-forecast" id="hourly-forecast" style="display: none;">
+    <h3>Saatlik Tahmin</h3>
+    <p id="hour-1"></p>
+    <p id="hour-2"></p>
+    <p id="hour-3"></p>
+  </div>
+  <div class="air-quality" id="air-quality-details" style="display: none;">
+    <h3>Hava Kalitesi</h3>
+    <p id="aqi"></p>
+    <p id="pm25"></p>
+    <p id="pm10"></p>
+  </div>
+  <div class="daily-forecast" id="daily-forecast" style="display: none;">
+    <h3>7 Günlük Tahmin</h3>
+    <p id="day-1"></p>
+    <p id="day-2"></p>
+    <p id="day-3"></p>
+    <p id="day-4"></p>
+    <p id="day-5"></p>
+    <p id="day-6"></p>
+    <p id="day-7"></p>
+  </div>
+  <div class="weather-alert" id="weather-alert" style="display: none;">
+    <h3>Hava Durumu Uyarısı</h3>
+    <p id="alert"></p>
+  </div>
+  <div class="visibility" id="visibility" style="display: none;">
+    Görüş Mesafesi: <span id="visibility-value"></span>
+  </div>
+  <div class="custom-background" id="background-info" style="display: none;">
+    <p id="background-temp"></p>
+    <p id="background-conditions"></p>
+  </div>
+  <div class="wind-direction" id="wind-direction" style="display: none;">
+    Rüzgar Yönü: <span id="wind-direction-value"></span>
+  </div>
+  <div class="astro-details" id="astro-details" style="display: none;">
+    <h3>Güneş ve Ay Detayları</h3>
+    <p id="moon-phase"></p>
+    <p id="solar-noon"></p>
+  </div>
+  <div class="error" id="error"></div>
+</div>
+
+<script>
+  const apiKey = "your_actual_api_key_here"; // Replace with a valid API key
+  const fetchWeatherButton = document.getElementById("fetch-weather");
+  const citySelect = document.getElementById("city-select");
+
+  fetchWeatherButton.addEventListener("click", () => {
+    const city = citySelect.value;
+    if (city) {
+      fetchWeather(city);
+    } else {
+      showError("Lütfen bir şehir seçin.");
+    }
+  });
+
+  async function fetchWeather(city) {
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=tr`;
+    try {
+      const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error("Hava durumu bilgisi alınamadı.");
+      }
+      const data = await response.json();
+      displayWeather(data);
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+
+  function displayWeather(data) {
+    document.getElementById("weather-info").style.display = "grid";
+    document.getElementById("alert").textContent = data.alerts ? data.alerts[0].event : "Hava durumu uyarısı yok";
+    document.getElementById("visibility-value").textContent = `${data.visibility / 1000} km`;
+    document.getElementById("wind-direction-value").textContent = data.wind.deg + "°";
+    document.getElementById("background-temp").textContent = `Sıcaklık: ${data.main.temp}°C`;
+    document.getElementById("background-conditions").textContent = `Durum: ${data.weather[0].description}`;
+    document.getElementById("moon-phase").textContent = "Ay Fazı: Bilgi mevcut değil";
+    document.getElementById("solar-noon").textContent = "Güneş Tepe Noktası: Bilgi mevcut değil";
+
+    document.getElementById("weather-alert").style.display = "block";
+    document.getElementById("visibility").style.display = "block";
+    document.getElementById("background-info").style.display = "block";
+    document.getElementById("wind-direction").style.display = "block";
+    document.getElementById("astro-details").style.display = "block";
+  }
+
+  function showError(message) {
+    document.getElementById("error").textContent = message;
+  }
+</script>
+</body>
+</html>
